@@ -1,16 +1,16 @@
 #[derive(Debug)]
 pub struct Node {
-    pub unit: String,
-    pub unit_num: i32,
-    pub stub_name: String,
-    pub stub_name_num: i32,
-    pub stub_label: String,
-    pub stub_label_num: f64,
-    pub year: String,
-    pub year_num: i32,
-    pub age: String,
-    pub age_num: i32,
-    pub estimate: f64,
+    pub unit: String, // Deaths per 100,000 unit
+    pub unit_num: i32, // 1 or 2 / adjusted or crude
+    pub stub_name: String, // demographic/s
+    pub stub_name_num: i32, // 1 - 11
+    pub stub_label: String, // category in demographic
+    pub stub_label_num: f64, // 1.0 - 11.0
+    pub year: String, // year
+    pub year_num: i32, // 1 - 50
+    pub age: String, // age group
+    pub age_num: i32, // 1 - 5
+    pub estimate: f64, // estimate rate, 0.0 - __.0
 }
 
 impl Node {
