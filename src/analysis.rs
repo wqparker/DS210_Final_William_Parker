@@ -18,12 +18,61 @@ pub fn louvain_algorithm(graph: &HashMap<String, Node>) -> Vec<HashSet<String>> 
 
         // Phase 1: Local Optimization
         for (node_id, node) in graph.iter() {
-            // TODO: Calculate the best community for the node
+            // Calculate the best community for the node
+            let current_modularity = calculate_modularity();
+            let mut best_modularity = current_modularity;
+            let mut best_community = None;
+
+            for (community_id, community) in &communities {
+                if community.contains(node_id) {
+                    continue; // Skip the current community
+                }
+
+                // Temporarily move the node to the new community
+                community.insert(node_id.clone());
+                let new_modularity = calculate_modularity();
+
+                if new_modularity > best_modularity {
+                    best_modularity = new_modularity;
+                    best_community = Some(community_id.clone());
+                }
+
+                // Revert the change
+                community.remove(node_id);
+            }
+
+            // Move the node if it improves modularity
+            if let Some(new_community_id) = best_community {
+                communities.get_mut(&new_community_id).unwrap().insert(node_id.clone());
+                communities.get_mut(node_id).unwrap().remove(node_id);
+                modularity_improved = true;
+            }
             // Move the node to the best community if modularity improves
         }
 
         // Phase 2: Community Aggregation
-        // TODO: Aggregate communities into super-nodes and create a new graph
+        // Aggregate communities into super-nodes and create a new graph
+        let mut new_graph: HashMap<String, Node> = HashMap::new();
+
+        for (community_id, community) in &communities {
+            let mut aggregated_node = Node::new(); // Replace with actual initialization of Node
+
+            for node_id in community {
+                let node = graph.get(node_id).unwrap();
+                for edge in &node.edges {
+                    if community.contains(&edge.target) {
+                        aggregated_node.add_internal_edge(edge.weight); // Adjust as needed
+                    } else {
+                        aggregated_node.add_external_edge(edge.target.clone(), edge.weight); // Adjust as needed
+                    }
+                }
+            }
+
+            new_graph.insert(community_id.clone(), aggregated_node);
+        }
+
+        // Replace graph with the new aggregated graph
+        *graph = new_graph;
 
         // Update modularity_improved based on changes in modularity
     }
