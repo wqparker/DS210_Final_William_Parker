@@ -1,14 +1,11 @@
 mod node;
 mod data_loader;
-mod edge_assigner;
-mod analysis; // Import the analysis module for Louvain Algorithm
+mod graph;
 mod graph_exporter;
 
 use crate::node::Node; // Import the Node struct
 use crate::data_loader::load_data_from_csv;
-use crate::edge_assigner::assign_edges_in_hashmaps;
-use std::collections::HashMap;
-use crate::graph_exporter::export_graph_to_csv;
+use crate::graph::{split_by_unit_num, subdivide_by_stub_name_num, build_graph};
 
 fn main() {
     let file_path = "data.csv";
@@ -23,16 +20,7 @@ fn main() {
     }
 
     // Split nodes into two groups based on `unit_num`
-    let mut group_1: Vec<Node> = Vec::new();
-    let mut group_2: Vec<Node> = Vec::new();
-
-    for node in nodes {
-        if node.unit_num == 1 {
-            group_1.push(node);
-        } else {
-            group_2.push(node);
-        }
-    }
+    let (group_1, group_2) = split_by_unit_num(nodes);
 
     println!(
         "Group 1 (unit_num == 1): {} nodes\nGroup 2 (unit_num != 1): {} nodes",
@@ -40,32 +28,15 @@ fn main() {
         group_2.len()
     );
 
-    // Initialize HashMaps for each stub_name_num in Group 2
-    let mut maps: [HashMap<String, Node>; 12] = Default::default();
+    // Subdivide Group 2 into 11 subvectors based on `stub_name_num`
+    let subgroups = subdivide_by_stub_name_num(group_2);
 
-    // Distribute Group 2 nodes into HashMaps
-    for node in group_2 {
-        let index = node.stub_name_num as usize;
-        if index < maps.len() {
-            let node_id = format!(
-                "{}-{}-{}",
-                node.stub_label_num, node.year_num, node.age_num
-            );
-            maps[index].insert(node_id, node);
-        }
+    // Print the number of nodes in graph 5 (index 5 of the subgroups)
+    if let Some(subgroup) = subgroups.get(5) {
+        let graph_5 = build_graph(subgroup.clone()); // Clone subgroup to pass into the function
+        println!("Graph 5 has {} nodes", graph_5.len());
+    } else {
+        println!("Graph 5 does not exist.");
     }
-
-    // Assign edges within each HashMap
-    assign_edges_in_hashmaps(&mut maps);
-
-    // Print sample output for verification
-    for (i, map) in maps.iter().enumerate() {
-        println!("HashMap {} has {} nodes", i, map.len());
-    }
-
-    // Export Graph 5 to a CSV
-    if let Some(graph_5) = maps.get(5) {
-        export_graph_to_csv(graph_5, "graph_5.csv");
-    }
-
+    
 }

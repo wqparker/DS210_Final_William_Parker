@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Node {
     pub unit: String,          // Deaths per 100,000 unit
     pub unit_num: i32,         // 1 or 2 / adjusted or crude
@@ -11,7 +11,6 @@ pub struct Node {
     pub age: String,           // age group
     pub age_num: i32,          // 1 - 5
     pub estimate: f64,         // estimate rate, 0.0 - __.0
-    pub edges: Vec<Edge>,      // List of edges connecting this node to others
 }
 
 impl Node {
@@ -32,13 +31,6 @@ impl Node {
             age: age.to_string(),
             age_num,
             estimate,
-            edges: Vec::new(), // Initialize edges as an empty vector
         }
     }
-}
-
-#[derive(Debug)]
-pub struct Edge {
-    pub target: String, // Node ID of the connected node
-    pub weight: f64,    // Weight of the connection
 }
