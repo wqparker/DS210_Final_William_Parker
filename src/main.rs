@@ -1,11 +1,14 @@
 mod node;
 mod data_loader;
 mod edge_assigner;
+mod analysis; // Import the analysis module for Louvain Algorithm
+mod graph_exporter;
 
 use crate::node::Node; // Import the Node struct
 use crate::data_loader::load_data_from_csv;
 use crate::edge_assigner::assign_edges_in_hashmaps;
 use std::collections::HashMap;
+use crate::graph_exporter::export_graph_to_csv;
 
 fn main() {
     let file_path = "data.csv";
@@ -60,36 +63,9 @@ fn main() {
         println!("HashMap {} has {} nodes", i, map.len());
     }
 
-    // Analyze Graph 9
-    println!("\nNodes and Edges in Graph 9:");
-    if let Some(graph_9) = maps.get(9) {
-        for (node_id, node) in graph_9.iter() {
-            println!("Node ID: {}", node_id);
-            for edge in &node.edges {
-                println!("  Connected to: {}, Weight: {:.2}", edge.target, edge.weight);
-            }
-        }
-
-        // Total edges in Graph 9
-        let total_edges: usize = graph_9.values().map(|node| node.edges.len()).sum();
-        println!("Total edges in Graph 9: {}", total_edges);
-    } else {
-        println!("Graph 9 is empty.");
+    // Export Graph 5 to a CSV
+    if let Some(graph_5) = maps.get(5) {
+        export_graph_to_csv(graph_5, "graph_5.csv");
     }
 
-    // Analyze edge density for all graphs
-    println!("\nGraph Edge Density:");
-    for (i, map) in maps.iter().enumerate() {
-        let node_count = map.len();
-        let edge_count: usize = map.values().map(|node| node.edges.len()).sum();
-        let avg_connections = if node_count > 0 {
-            edge_count as f64 / node_count as f64
-        } else {
-            0.0
-        };
-        println!(
-            "Graph {}: {} nodes, {} edges, {:.2} avg connections per node",
-            i, node_count, edge_count, avg_connections
-        );
-    }
 }
