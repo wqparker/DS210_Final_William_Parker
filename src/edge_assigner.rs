@@ -10,11 +10,15 @@ pub fn assign_edges_in_hashmaps(maps: &mut [HashMap<String, Node>; 12]) {
 
         let node_count = nodes.len();
         for j in 0..node_count {
-            // Split the vector at index j to create two non-overlapping slices
             let (left, right) = nodes.split_at_mut(j + 1);
-            let node_a = &mut left[j]; // Node A from the left slice
+            let node_a = &mut left[j];
 
-            for node_b in right.iter_mut() { // Node B from the right slice
+            for node_b in right.iter_mut() {
+                // skip if either node does not have an estimate value
+                if node_a.estimate == 0.0 || node_b.estimate == 0.0 {
+                    continue;
+                }
+
                 // Check if the nodes share at least one matching field
                 if node_a.stub_label_num == node_b.stub_label_num
                     || node_a.year_num == node_b.year_num
