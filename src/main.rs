@@ -4,21 +4,34 @@ mod data_loader;
 use data_loader::load_data_from_csv;
 
 fn main() {
-    // Define the file path to your CSV file
     let file_path = "data.csv";
 
-    // Load the data
-    let data = load_data_from_csv(file_path);
+    // Load all nodes from the CSV
+    let nodes = load_data_from_csv(file_path);
 
-    // Check if the data was loaded successfully
-    if data.is_empty() {
-        println!("No data was loaded. Please check the file path or the file format.");
-    } else {
-        println!("Data loaded successfully! Total rows: {}", data.len());
+    if nodes.is_empty() {
+        println!("No data was loaded. Please check the file path or format.");
+        return;
+    }
 
-        // Print the first few entries (e.g., the first 3 rows)
-        for (i, entry) in data.iter().take(3).enumerate() {
-            println!("Row {}: {:?}", i + 1, entry);
-        }
+    println!("Total nodes loaded: {}", nodes.len());
+
+    // Separate nodes into two groups based on unit_num
+    let (group1, group2): (Vec<_>, Vec<_>) = nodes.into_iter()
+        .partition(|node| node.unit_num == 1);
+
+    // Print the counts of each group
+    println!("Group 1 (unit_num == 1): {} nodes", group1.len());
+    println!("Group 2 (unit_num == 2): {} nodes", group2.len());
+
+    // (Optional) Print some nodes from each group for verification
+    println!("Sample from Group 1:");
+    for (i, node) in group1.iter().take(5).enumerate() {
+        println!("Node {}: {:?}", i + 1, node);
+    }
+
+    println!("Sample from Group 2:");
+    for (i, node) in group2.iter().take(5).enumerate() {
+        println!("Node {}: {:?}", i + 1, node);
     }
 }
