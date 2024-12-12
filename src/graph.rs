@@ -68,12 +68,23 @@ pub fn build_graph(nodes: Vec<Node>) -> HashMap<String, Vec<(String, f64)>> {
             if node_a.estimate == 0.0 || node_b.estimate == 0.0 {
                 continue;
             }
-
+//
+            //let mut counter = 0.0;
+            //if node_a.stub_label_num == node_b.stub_label_num {
+            //    counter += 1.0;
+            //}
+            //if node_a.year_num == node_b.year_num {
+            //    counter += 1.0;
+            //}
+            //if node_a.age_num == node_b.age_num {
+            //    counter += 1.0;
+            //}
+            //if counter >= 2.0 {
             // Check if the nodes share at least one matching field
-            if node_a.stub_label_num == node_b.stub_label_num
-                || node_a.year_num == node_b.year_num
-                || node_a.age_num == node_b.age_num
-            {
+            //if node_a.stub_label_num == node_b.stub_label_num
+            //    || node_a.year_num == node_b.year_num
+            //    || node_a.age_num == node_b.age_num
+            //{
                 // Find the higher of the two estimates
                 let higher_estimate = f64::max(node_a.estimate, node_b.estimate);
 
@@ -82,20 +93,31 @@ pub fn build_graph(nodes: Vec<Node>) -> HashMap<String, Vec<(String, f64)>> {
                 let normalized_b = node_b.estimate / higher_estimate;
 
                 // Calculate the edge weight
-                let weight = 1.0 - (normalized_a - normalized_b).abs();
-
-                // Add bidirectional edges
-                graph.entry(node_a_id.clone())
-                    .or_insert_with(Vec::new)
-                    .push((
-                        format!("{}-{}-{}", node_b.stub_label_num, node_b.year_num, node_b.age_num),
-                        weight,
-                    ));
-
-                let node_b_id = format!("{}-{}-{}", node_b.stub_label_num, node_b.year_num, node_b.age_num);
-                graph.entry(node_b_id)
-                    .or_insert_with(Vec::new)
-                    .push((node_a_id.clone(), weight));
+                let mut weight = 1.0 - (normalized_a - normalized_b).abs();
+                //if node_a.stub_label_num == node_b.stub_label_num {
+                //    weight += 1.0;
+                //}
+                //if node_a.year_num == node_b.year_num {
+                //    weight += 1.0;
+                //}
+                //if node_a.age_num == node_b.age_num {
+                //    weight += 1.0;
+                //}
+                //let weight = weight + counter;
+                if weight >= 0.0 {
+                    // Add bidirectional edges
+                    graph.entry(node_a_id.clone())
+                        .or_insert_with(Vec::new)
+                        .push((
+                            format!("{}-{}-{}", node_b.stub_label_num, node_b.year_num, node_b.age_num),
+                            weight,
+                        ));
+    
+                    let node_b_id = format!("{}-{}-{}", node_b.stub_label_num, node_b.year_num, node_b.age_num);
+                    graph.entry(node_b_id)
+                        .or_insert_with(Vec::new)
+                        .push((node_a_id.clone(), weight));
+                //}
             }
         }
     }

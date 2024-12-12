@@ -1,12 +1,16 @@
 mod node;
 mod data_loader;
-mod graph;
+mod edge_assigner;
+mod analysis; // Import the analysis module for Louvain Algorithm
 mod graph_exporter;
+mod graph;
 
 use crate::node::Node; // Import the Node struct
 use crate::data_loader::load_data_from_csv;
+use crate::graph_exporter::export_graph_to_csv;
 use crate::graph::{split_by_unit_num, subdivide_by_stub_name_num, build_graph};
-use crate::graph_exporter::{export_graph_to_csv};
+use crate::analysis::louvain; // Import the Louvain function
+use std::collections::HashMap;
 
 fn main() {
     let file_path = "data.csv";
@@ -29,28 +33,23 @@ fn main() {
         group_2.len()
     );
 
+
     // Subdivide Group 2 into 11 subvectors based on `stub_name_num`
     let subgroups = subdivide_by_stub_name_num(group_2);
 
-    // Print the number of nodes in graph 5 (index 5 of the subgroups)
-    if let Some(subgroup) = subgroups.get(5) {
-        let graph_5 = build_graph(subgroup.clone()); // Clone subgroup to pass into the function
-        println!("Graph 5 has {} nodes", graph_5.len());
-        // Export Graph 5 to a CSV file
-        export_graph_to_csv(&graph_5, "graph_5.csv");
-
-        // Print an example node from graph 5
-        if let Some((example_node_id, example_edges)) = graph_5.iter().next() {
-            //println!(
-            //    "Example node ID: {}\nConnected nodes and weights: {:?}",
-            //    example_node_id, example_edges
-            //);
+    for (index, subgroup) in subgroups.into_iter().enumerate() {
+        // Check if the subgroup has elements
+        if !subgroup.is_empty() {
+            // Use the Vec<Node> directly
+            let graph = build_graph(subgroup); // Pass Vec<Node> directly to build_graph
+            println!("Graph {} has {} nodes.", index + 1, graph.len());
+    
+            // Export the graph to CSV
+            let file_name = format!("graph_{}.csv", index + 1);
+            export_graph_to_csv(&graph, &file_name);
+            println!("Graph {} exported to {}.", index + 1, file_name);
         } else {
-            println!("Graph 5 is empty.");
+            println!("Graph {} does not exist.", index + 1);
         }
-    } else {
-        println!("Graph 5 does not exist.");
-    }
-    
-    
+    }     
 }
