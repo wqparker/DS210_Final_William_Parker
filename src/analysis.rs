@@ -18,8 +18,38 @@ pub fn calculate_modularity(
     graph: &Graph, 
     communities: &CommunityMapping
 ) -> f64 {
-    // TODO: Implement modularity calculation
-    unimplemented!();
+    let mut modularity = 0.0;
+    let mut total_weight = 0.0;
+
+    // Step 1: Calculate total weight (sum of all edge weights)
+    for edges in graph.values() {
+        for (_, weight) in edges {
+            total_weight += weight;
+        }
+    }
+    total_weight /= 2.0; // Each edge is counted twice
+
+    // Step 2: Compute modularity
+    for (node, edges) in graph {
+        let node_community = communities.get(node).unwrap_or(&0);
+        let degree_i: f64 = edges.iter().map(|(_, weight)| weight).sum(); // k_i
+
+        for (neighbor, weight) in edges {
+            let neighbor_community = communities.get(neighbor).unwrap_or(&0);
+            let degree_j: f64 = graph.get(neighbor)
+                .unwrap_or(&vec![])
+                .iter()
+                .map(|(_, weight)| weight)
+                .sum(); // k_j
+
+            // Check if nodes are in the same community
+            if node_community == neighbor_community {
+                modularity += *weight - (degree_i * degree_j) / (2.0 * total_weight);
+            }
+        }
+    }
+
+    modularity / (2.0 * total_weight)
 }
 
 /// Initializes each node to its own community.
@@ -123,5 +153,23 @@ mod tests {
         expected.insert("C".to_string(), 2);
 
         assert_eq!(communities, expected);
+    }
+
+    #[test]
+    fn test_calculate_modularity() {
+        let mut graph: Graph = HashMap::new();
+        graph.insert("A".to_string(), vec![("B".to_string(), 1.0)]);
+        graph.insert("B".to_string(), vec![("A".to_string(), 1.0), ("C".to_string(), 2.0)]);
+        graph.insert("C".to_string(), vec![("B".to_string(), 2.0)]);
+    
+        let mut communities = CommunityMapping::new();
+        communities.insert("A".to_string(), 0);
+        communities.insert("B".to_string(), 0);
+        communities.insert("C".to_string(), 0); // All nodes in one community
+    
+        let modularity = calculate_modularity(&graph, &communities);
+        println!("the modularity is: {modularity}");
+        let expected_modularity = 0.5; // No separation of communities
+        assert!((modularity - expected_modularity).abs() < 1e-6);
     }
 }
