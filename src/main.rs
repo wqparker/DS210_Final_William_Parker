@@ -9,7 +9,7 @@ use crate::node::Node; // Import the Node struct
 use crate::data_loader::load_data_from_csv;
 use crate::graph_exporter::export_graph_to_csv;
 use crate::graph::{split_by_unit_num, subdivide_by_stub_name_num, build_graph};
-use crate::analysis::louvain; // Import the Louvain function
+
 use std::collections::HashMap;
 
 fn main() {

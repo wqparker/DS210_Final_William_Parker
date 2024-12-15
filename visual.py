@@ -42,17 +42,18 @@ def export_filtered_graph(graph, pos, edges, output_file):
     print(f"Graph saved as {output_file}")
 
 # Main function to process and export graphs
-def export_graphs_from_files(csv_files, output_prefix="beta_graph"):
+def export_graphs_from_files(csv_file, output_prefix="beta_graph"):
     """Load and export graphs from a list of CSV files."""
-    for i, file_path in enumerate(csv_files):
-        graph = load_graph_from_csv(file_path)
-        pos = nx.spring_layout(graph, seed=42)  # Consistent layout
-        edges = list(graph.edges(data=True))
-        output_file = f"{output_prefix}_{i + 1}_gray.png"
-        print(f"Graph {i + 1}: {len(graph.nodes)} nodes, {len(graph.edges)} edges")
-        export_filtered_graph(graph, pos, edges, output_file)
+    graph = load_graph_from_csv(csv_file)
+    pos = nx.spring_layout(graph, seed=42, weight = 'weight')  # Consistent layout
+    edges = list(graph.edges(data=True))
+    output_file = f"{output_prefix}_{csv_file}_gray.png"
+    print(f"Graph {csv_file}: {len(graph.nodes)} nodes, {len(graph.edges)} edges")
+    export_filtered_graph(graph, pos, edges, output_file)
 
 # Load and export the graphs
 if __name__ == "__main__":
-    csv_files = glob.glob("graph_*.csv")  # Assuming files are named graph_1.csv, graph_2.csv, etc.
-    export_graphs_from_files(csv_files)
+    export_graphs_from_files("old_graph_5.csv")
+    for i in range (1, 13):
+        export_graphs_from_files(f"graph_{i}.csv")
+    

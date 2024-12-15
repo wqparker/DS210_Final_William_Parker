@@ -59,7 +59,7 @@ pub fn subdivide_by_stub_name_num(nodes: Vec<Node>) -> Vec<Vec<Node>> {
 ///   - Values are vectors of tuples containing connected node IDs and their respective edge weights.
 pub fn build_graph(nodes: Vec<Node>) -> HashMap<String, Vec<(String, f64)>> {
     let mut graph: HashMap<String, Vec<(String, f64)>> = HashMap::new();
-
+    let mut edge_counter = 0;
     for (i, node_a) in nodes.iter().enumerate() {
         let node_a_id = format!("{}-{}-{}", node_a.stub_label_num, node_a.year_num, node_a.age_num);
 
@@ -81,10 +81,10 @@ pub fn build_graph(nodes: Vec<Node>) -> HashMap<String, Vec<(String, f64)>> {
             //}
             //if counter >= 2.0 {
             // Check if the nodes share at least one matching field
-            //if node_a.stub_label_num == node_b.stub_label_num
-            //    || node_a.year_num == node_b.year_num
-            //    || node_a.age_num == node_b.age_num
-            //{
+            if node_a.stub_label_num == node_b.stub_label_num
+                || node_a.year_num == node_b.year_num
+                || node_a.age_num == node_b.age_num
+            {
                 // Find the higher of the two estimates
                 let higher_estimate = f64::max(node_a.estimate, node_b.estimate);
 
@@ -105,6 +105,7 @@ pub fn build_graph(nodes: Vec<Node>) -> HashMap<String, Vec<(String, f64)>> {
                 //}
                 //let weight = weight + counter;
                 if weight >= 0.0 {
+                    edge_counter += 2;
                     // Add bidirectional edges
                     graph.entry(node_a_id.clone())
                         .or_insert_with(Vec::new)
@@ -117,10 +118,11 @@ pub fn build_graph(nodes: Vec<Node>) -> HashMap<String, Vec<(String, f64)>> {
                     graph.entry(node_b_id)
                         .or_insert_with(Vec::new)
                         .push((node_a_id.clone(), weight));
-                //}
+                }
             }
         }
     }
+    print!("This graph has {edge_counter} edges");
 
     graph
 }
