@@ -44,8 +44,8 @@ fn main() {
             println!("Graph 6 has {} nodes.", graph.len());
 
             // Run Louvain Algorithm on the graph
-            println!("Running Louvain algorithm...");
-            run_louvain(&graph);
+            //println!("Running Louvain algorithm...");
+            //run_louvain(&graph);
         } else {
             println!("Graph 6 does not exist.");
         }
