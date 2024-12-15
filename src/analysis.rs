@@ -124,8 +124,15 @@ pub fn update_community_degrees(
     graph: &Graph,
     communities: &CommunityMapping
 ) -> HashMap<usize, f64> {
-    // TODO: Implement community degree calculation
-    unimplemented!();
+    let mut community_degrees = HashMap::new();
+
+    for (node, edges) in graph {
+        let community = communities.get(node).unwrap_or(&0);
+        let degree: f64 = edges.iter().map(|(_, weight)| weight).sum();
+        *community_degrees.entry(*community).or_insert(0.0) += degree;
+    }
+
+    community_degrees
 }
 
 /// Aggregates the graph based on the current community assignments.
@@ -196,22 +203,43 @@ mod tests {
     }
 
     #[test]
-fn test_find_best_community_for_node() {
-    let mut graph: Graph = HashMap::new();
-    graph.insert("A".to_string(), vec![("B".to_string(), 1.0), ("C".to_string(), 1.0)]);
-    graph.insert("B".to_string(), vec![("A".to_string(), 1.0)]);
-    graph.insert("C".to_string(), vec![("A".to_string(), 1.0)]);
+    fn test_find_best_community_for_node() {
+        let mut graph: Graph = HashMap::new();
+        graph.insert("A".to_string(), vec![("B".to_string(), 1.0), ("C".to_string(), 1.0)]);
+        graph.insert("B".to_string(), vec![("A".to_string(), 1.0)]);
+        graph.insert("C".to_string(), vec![("A".to_string(), 1.0)]);
 
-    let mut communities = CommunityMapping::new();
-    communities.insert("A".to_string(), 0);
-    communities.insert("B".to_string(), 1);
-    communities.insert("C".to_string(), 1);
+        let mut communities = CommunityMapping::new();
+        communities.insert("A".to_string(), 0);
+        communities.insert("B".to_string(), 1);
+        communities.insert("C".to_string(), 1);
 
-    let total_weight = 3.0; // Total edge weight = 3.0 (1.0 + 1.0 + 1.0)
+        let total_weight = 3.0; // Total edge weight = 3.0 (1.0 + 1.0 + 1.0)
 
-    let best_community = find_best_community_for_node(&graph, &communities, total_weight, &"A".to_string());
+        let best_community = find_best_community_for_node(&graph, &communities, total_weight, &"A".to_string());
 
-    assert_eq!(best_community, 1);
-}
+        assert_eq!(best_community, 1);
+    }
+
+    #[test]
+    fn test_update_community_degrees() {
+        let mut graph: Graph = HashMap::new();
+        graph.insert("A".to_string(), vec![("B".to_string(), 1.0)]);
+        graph.insert("B".to_string(), vec![("A".to_string(), 1.0), ("C".to_string(), 2.0)]);
+        graph.insert("C".to_string(), vec![("B".to_string(), 2.0)]);
+
+        let mut communities = CommunityMapping::new();
+        communities.insert("A".to_string(), 0);
+        communities.insert("B".to_string(), 0);
+        communities.insert("C".to_string(), 1);
+
+        let degrees = update_community_degrees(&graph, &communities);
+
+        let mut expected = HashMap::new();
+        expected.insert(0, 4.0); // Community 0: A-B (1.0) + B-C (2.0) counted twice for B
+        expected.insert(1, 2.0); // Community 1: C-B (2.0)
+
+        assert_eq!(degrees, expected);
+    }
 
 }
