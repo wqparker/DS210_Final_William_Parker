@@ -143,13 +143,50 @@ pub fn update_community_degrees(
 /// 
 /// # Returns:
 /// - A new aggregated graph.
+/// Aggregates the graph based on the current community assignments.
+/// 
+/// # Parameters:
+/// - `graph`: Reference to the graph.
+/// - `communities`: Mapping of nodes to community IDs.
+/// 
+/// # Returns:
+/// - A new aggregated graph.
 pub fn aggregate_graph(
     graph: &Graph,
     communities: &CommunityMapping
 ) -> Graph {
-    // TODO: Implement graph aggregation
-    unimplemented!();
+    let mut aggregated_graph: HashMap<usize, HashMap<usize, f64>> = HashMap::new();
+
+    for (node, edges) in graph {
+        let node_community = *communities.get(node).unwrap_or(&0);
+
+        for (neighbor, weight) in edges {
+            let neighbor_community = *communities.get(neighbor).unwrap_or(&0);
+
+            // Aggregate edge weights between communities
+            *aggregated_graph
+                .entry(node_community)
+                .or_insert_with(HashMap::new)
+                .entry(neighbor_community)
+                .or_insert(0.0) += *weight;
+        }
+    }
+
+    // Convert the aggregated data into the desired Graph format
+    let mut new_graph = Graph::new();
+    for (community, edges) in aggregated_graph {
+        let mut edges_vec: Vec<_> = edges.into_iter()
+            .map(|(neighbor_community, weight)| (neighbor_community.to_string(), weight))
+            .collect();
+        
+        // Sort edges to ensure deterministic order
+        edges_vec.sort_by(|a, b| a.0.cmp(&b.0));
+        new_graph.insert(community.to_string(), edges_vec);
+    }
+
+    new_graph
 }
+
 
 /// Runs the Louvain algorithm to detect communities.
 /// 
@@ -240,6 +277,27 @@ mod tests {
         expected.insert(1, 2.0); // Community 1: C-B (2.0)
 
         assert_eq!(degrees, expected);
+    }
+
+    #[test]
+    fn test_aggregate_graph() {
+        let mut graph: Graph = HashMap::new();
+        graph.insert("A".to_string(), vec![("B".to_string(), 1.0)]);
+        graph.insert("B".to_string(), vec![("A".to_string(), 1.0), ("C".to_string(), 2.0)]);
+        graph.insert("C".to_string(), vec![("B".to_string(), 2.0)]);
+
+        let mut communities = CommunityMapping::new();
+        communities.insert("A".to_string(), 0);
+        communities.insert("B".to_string(), 0);
+        communities.insert("C".to_string(), 1);
+
+        let aggregated = aggregate_graph(&graph, &communities);
+
+        let mut expected = Graph::new();
+        expected.insert("0".to_string(), vec![("0".to_string(), 2.0), ("1".to_string(), 2.0)]);
+        expected.insert("1".to_string(), vec![("0".to_string(), 2.0)]);
+
+        assert_eq!(aggregated, expected);
     }
 
 }
