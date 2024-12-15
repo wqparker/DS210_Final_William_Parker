@@ -1,6 +1,5 @@
 mod node;
 mod data_loader;
-mod edge_assigner;
 mod analysis; // Import the analysis module for Louvain Algorithm
 mod graph_exporter;
 mod graph;
@@ -9,6 +8,7 @@ use crate::node::Node; // Import the Node struct
 use crate::data_loader::load_data_from_csv;
 use crate::graph_exporter::export_graph_to_csv;
 use crate::graph::{split_by_unit_num, subdivide_by_stub_name_num, build_graph};
+use crate::analysis::{run_louvain};
 
 use std::collections::HashMap;
 
@@ -37,19 +37,19 @@ fn main() {
     // Subdivide Group 2 into 11 subvectors based on `stub_name_num`
     let subgroups = subdivide_by_stub_name_num(group_2);
 
-    for (index, subgroup) in subgroups.into_iter().enumerate() {
-        // Check if the subgroup has elements
+    // Work with only the 6th group (index 5)
+    if let Some(subgroup) = subgroups.get(5) {
         if !subgroup.is_empty() {
-            // Use the Vec<Node> directly
-            let graph = build_graph(subgroup); // Pass Vec<Node> directly to build_graph
-            println!("Graph {} has {} nodes.", index + 1, graph.len());
-    
-            // Export the graph to CSV
-            let file_name = format!("graph_{}.csv", index + 1);
-            export_graph_to_csv(&graph, &file_name);
-            println!("Graph {} exported to {}.", index + 1, file_name);
+            let graph = build_graph(subgroup.clone()); // Pass Vec<Node> directly to build_graph
+            println!("Graph 6 has {} nodes.", graph.len());
+
+            // Run Louvain Algorithm on the graph
+            println!("Running Louvain algorithm...");
+            run_louvain(&graph);
         } else {
-            println!("Graph {} does not exist.", index + 1);
+            println!("Graph 6 does not exist.");
         }
+    } else {
+        println!("Subgroup 6 (index 5) is out of bounds.");
     }     
 }
