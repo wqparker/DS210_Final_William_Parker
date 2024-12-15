@@ -61,6 +61,20 @@ pub fn louvain_algorithm(
     println!("Beginning base louvain algorithm...");
     let mut improvement_state = 0; // To track the improvement print state
 
+    // Calculate total edge weight for modularity calculations
+    let total_weight: f64 = graph.values()
+        .flat_map(|edges| edges.iter())
+        .map(|(_, w)| *w)
+        .sum::<f64>() / 2.0; // Each edge is counted twice
+
+    // Precompute initial community degrees
+    let mut community_degrees: HashMap<usize, f64> = HashMap::new();
+    for (node, edges) in graph {
+        let community = *communities.get(node).unwrap_or(&0);
+        let degree: f64 = edges.iter().map(|(_, weight)| weight).sum();
+        *community_degrees.entry(community).or_insert(0.0) += degree;
+    }
+
     while improved {
         // Print alternating improvement messages
         match improvement_state % 4 {
@@ -71,37 +85,53 @@ pub fn louvain_algorithm(
             _ => (),
         }
         improvement_state += 1;
-
+    
+        println!("Modularity before iteration {}: {:.6}", improvement_state, calculate_modularity(graph, &communities));
+    
         improved = false;
-
+    
         for node in graph.keys() {
             let current_community = communities.get(node).unwrap_or(&0).to_owned();
             let mut best_community = current_community;
             let mut max_modularity_gain = 0.0;
-
+    
             let mut community_neighbors: HashMap<usize, f64> = HashMap::new();
+            let node_degree: f64 = graph[node].iter().map(|(_, weight)| weight).sum();
+    
+            // Sum weights of edges connecting to each community
             for (neighbor, weight) in &graph[node] {
                 let neighbor_community = *communities.get(neighbor).unwrap_or(&0);
                 *community_neighbors.entry(neighbor_community).or_insert(0.0) += weight;
             }
-
-            for (&community, &weight) in &community_neighbors {
-                let modularity_gain = weight - (weight * weight) / 2.0;
+    
+            // Evaluate modularity gain for moving node to each neighboring community
+            for (&community, &edge_sum) in &community_neighbors {
+                let community_degree = community_degrees.get(&community).unwrap_or(&0.0);
+                let modularity_gain = (edge_sum / total_weight) - (node_degree * community_degree) / (2.0 * total_weight * total_weight);
+    
                 if modularity_gain > max_modularity_gain {
                     max_modularity_gain = modularity_gain;
                     best_community = community;
                 }
             }
-
+    
+            // Move node to the best community and update degrees
             if best_community != current_community {
                 communities.insert(node.clone(), best_community);
+                *community_degrees.entry(current_community).or_insert(0.0) -= node_degree;
+                *community_degrees.entry(best_community).or_insert(0.0) += node_degree;
                 improved = true;
             }
         }
+    
+        println!("Modularity after iteration {}: {:.6}", improvement_state, calculate_modularity(graph, &communities));
     }
+    
 
     communities
 }
+
+
 
 
 /// Aggregates the graph based on the current community assignments.
@@ -113,25 +143,37 @@ pub fn louvain_algorithm(
 /// # Returns:
 /// - A new graph aggregated by communities.
 pub fn aggregate_graph(
-    graph: &HashMap<String, Vec<(String, f64)>>,
-    communities: &CommunityMapping,
+    graph: &HashMap<String, Vec<(String, f64)>>, 
+    communities: &CommunityMapping
 ) -> HashMap<String, Vec<(String, f64)>> {
-    let mut aggregated_graph = HashMap::new();
+    let mut aggregated_graph: HashMap<String, HashMap<String, f64>> = HashMap::new();
 
     for (node, edges) in graph {
         let node_community = communities.get(node).unwrap_or(&0).to_string();
         for (neighbor, weight) in edges {
             let neighbor_community = communities.get(neighbor).unwrap_or(&0).to_string();
-            if node_community != neighbor_community {
-                aggregated_graph.entry(node_community.clone())
-                    .or_insert_with(Vec::new)
-                    .push((neighbor_community.clone(), *weight));
-            }
+
+            // Merge edges by summing weights between communities
+            *aggregated_graph
+                .entry(node_community.clone())
+                .or_insert_with(HashMap::new)
+                .entry(neighbor_community.clone())
+                .or_insert(0.0) += weight;
         }
     }
 
-    aggregated_graph
+    // Convert to the expected output format
+    let mut new_graph = HashMap::new();
+    for (community, neighbors) in aggregated_graph {
+        new_graph.insert(
+            community,
+            neighbors.into_iter().collect::<Vec<(String, f64)>>(),
+        );
+    }
+
+    new_graph
 }
+
 
 /// Runs the Louvain algorithm and returns the final community structure.
 pub fn run_louvain(graph: &HashMap<String, Vec<(String, f64)>>) {
