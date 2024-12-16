@@ -68,18 +68,7 @@ pub fn build_graph(nodes: Vec<Node>) -> HashMap<String, Vec<(String, f64)>> {
             if node_a.estimate == 0.0 || node_b.estimate == 0.0 {
                 continue;
             }
-//
-            //let mut counter = 0.0;
-            //if node_a.stub_label_num == node_b.stub_label_num {
-            //    counter += 1.0;
-            //}
-            //if node_a.year_num == node_b.year_num {
-            //    counter += 1.0;
-            //}
-            //if node_a.age_num == node_b.age_num {
-            //    counter += 1.0;
-            //}
-            //if counter >= 2.0 {
+
             // Check if the nodes share at least one matching field
             if node_a.stub_label_num == node_b.stub_label_num
                 || node_a.year_num == node_b.year_num
@@ -94,16 +83,7 @@ pub fn build_graph(nodes: Vec<Node>) -> HashMap<String, Vec<(String, f64)>> {
 
                 // Calculate the edge weight
                 let mut weight = 1.0 - (normalized_a - normalized_b).abs();
-                //if node_a.stub_label_num == node_b.stub_label_num {
-                //    weight += 1.0;
-                //}
-                //if node_a.year_num == node_b.year_num {
-                //    weight += 1.0;
-                //}
-                //if node_a.age_num == node_b.age_num {
-                //    weight += 1.0;
-                //}
-                //let weight = weight + counter;
+
                 if weight >= 0.0 {
                     edge_counter += 2;
                     // Add bidirectional edges
@@ -122,7 +102,75 @@ pub fn build_graph(nodes: Vec<Node>) -> HashMap<String, Vec<(String, f64)>> {
             }
         }
     }
-    print!("This graph has {edge_counter} edges");
+    println!("This graph has {edge_counter} edges");
 
     graph
+}
+
+fn sort_graph(graph: &mut HashMap<String, Vec<(String, f64)>>) -> Vec<(String, Vec<(String, f64)>)> {
+    let mut sorted_graph: Vec<_> = graph.iter()
+        .map(|(key, value)| {
+            let mut sorted_edges = value.clone();
+            sorted_edges.sort_by(|a, b| a.0.cmp(&b.0)); // Sort edges by node ID
+            (key.clone(), sorted_edges)
+        })
+        .collect();
+
+    sorted_graph.sort_by(|a, b| a.0.cmp(&b.0)); // Sort top-level keys
+    sorted_graph
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::node::Node;
+    use std::collections::HashMap;
+
+    #[test]
+    fn test_build_graph() {
+        // Input test data: Create nodes
+        let nodes = vec![
+            Node::new("Deaths per 100,000", 1, "Sex and race", 4, "Male: AI/AN", 4.13, "1988", 12, "All ages", 0, 20.2),
+            Node::new("Deaths per 100,000", 1, "Sex and race", 4, "Male: AI/AN", 4.13, "1989", 13, "All ages", 0, 19.9),
+            Node::new("Deaths per 100,000", 2, "Sex and race", 4, "Male: AI/AN", 4.13, "1990", 14, "All ages", 0, 20.9),
+        ];
+
+        // Expected output graph
+        let mut expected_graph: HashMap<String, Vec<(String, f64)>> = HashMap::new();
+
+        // Manually construct the expected graph
+        expected_graph.insert(
+            "4.13-12-0".to_string(),
+            vec![
+                ("4.13-13-0".to_string(), 1.0_f64 - (20.2_f64 / 20.2_f64 - 19.9_f64 / 20.2_f64).abs()),
+                ("4.13-14-0".to_string(), 1.0_f64 - (20.2_f64 / 20.9_f64 - 20.9_f64 / 20.9_f64).abs()),
+            ],
+        );
+
+        expected_graph.insert(
+            "4.13-13-0".to_string(),
+            vec![
+                ("4.13-12-0".to_string(), 1.0_f64 - (19.9_f64 / 20.2_f64 - 20.2_f64 / 20.2_f64).abs()),
+                ("4.13-14-0".to_string(), 1.0_f64 - (19.9_f64 / 20.9_f64 - 20.9_f64 / 20.9_f64).abs()),
+            ],
+        );
+
+        expected_graph.insert(
+            "4.13-14-0".to_string(),
+            vec![
+                ("4.13-12-0".to_string(), 1.0_f64 - (20.9_f64 / 20.9_f64 - 20.2_f64 / 20.9_f64).abs()),
+                ("4.13-13-0".to_string(), 1.0_f64 - (20.9_f64 / 20.9_f64 - 19.9_f64 / 20.9_f64).abs()),
+            ],
+        );
+
+        // Call the function to build the graph
+        let mut graph = build_graph(nodes);
+
+        // Sort both graphs
+        let sorted_actual = sort_graph(&mut graph);
+        let sorted_expected = sort_graph(&mut expected_graph);
+
+        assert_eq!(sorted_actual, sorted_expected);
+    }
 }
