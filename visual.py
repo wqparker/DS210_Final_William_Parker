@@ -39,7 +39,7 @@ def export_filtered_graph(graph, pos, edges, output_file):
     print(f"Graph saved as {output_file}")
 
 # Main function to process and export graphs
-def export_graphs_from_files(csv_file, output_prefix="gamma_graph"):
+def export_graphs_from_files(csv_file, output_prefix="final"):
     """Load and export graphs from a list of CSV files."""
     graph = load_graph_from_csv(csv_file)
     pos = nx.spring_layout(graph, seed=42, weight = 'weight')  # Consistent layout
@@ -50,8 +50,8 @@ def export_graphs_from_files(csv_file, output_prefix="gamma_graph"):
 
 # Load and export the graphs
 if __name__ == "__main__":
-    export_graphs_from_files("old_graph_5.csv")
-    export_graphs_from_files("new_graph_6.csv")
-    for i in range (1, 13):
-        export_graphs_from_files(f"graph_{i}.csv")
+    #export_graphs_from_files("old_graph_5.csv")
+    export_graphs_from_files("graph_6.csv")
+    #for i in range (1, 13):
+    #    export_graphs_from_files(f"graph_{i}.csv")
     

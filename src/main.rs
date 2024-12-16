@@ -11,8 +11,9 @@ use crate::graph::{split_by_unit_num, subdivide_by_stub_name_num, build_graph};
 use crate::analysis::{run_label_propagation};
 
 use std::collections::HashMap;
-
+// main function to work with data
 fn main() {
+    // file path
     let file_path = "data.csv";
 
     // Load nodes from the CSV
@@ -44,12 +45,9 @@ fn main() {
             println!("Graph 6 has {} nodes.", graph.len());
 
             // Run LPA alg on data
-            let new_graph = run_label_propagation(&graph);
+            //let new_graph = run_label_propagation(&graph);
 
-            //for (node, neighbors) in new_graph {
-            //    println!("Node: {}, Neighbors: {:?}", node, neighbors);
-            //}
-            export_graph_to_csv(&new_graph, "new_graph_6.csv");
+            export_graph_to_csv(&graph, "graph_6.csv");
 
         } else {
             println!("Graph 6 does not exist.");

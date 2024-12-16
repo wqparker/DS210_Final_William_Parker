@@ -1,15 +1,8 @@
 use std::collections::HashMap;
 use crate::node::Node;
 
-/// Splits a vector of nodes into two groups based on the `unit_num` value.
-/// 
-/// # Parameters:
-/// - `nodes`: A vector of all nodes.
-/// 
-/// # Returns:
-/// - A tuple containing two vectors:
-///   - First vector: Nodes with `unit_num == 1`.
-///   - Second vector: Nodes with `unit_num != 1`.
+// splits the base vector of all nodes in data into 2 base subgroups
+// division based on crude or adjusted numbers
 pub fn split_by_unit_num(nodes: Vec<Node>) -> (Vec<Node>, Vec<Node>) {
     let mut group_1 = Vec::new();
     let mut group_2 = Vec::new();
@@ -25,16 +18,11 @@ pub fn split_by_unit_num(nodes: Vec<Node>) -> (Vec<Node>, Vec<Node>) {
     (group_1, group_2)
 }
 
-/// Subdivides a vector of nodes into 11 subvectors based on the `stub_name_num` value.
-/// 
-/// # Parameters:
-/// - `nodes`: A vector of nodes to subdivide.
-/// 
-/// # Returns:
-/// - A vector containing 11 subvectors, each corresponding to a `stub_name_num` value from 0 to 10.
+// subdivides a group of nodes into their sub categories based on how they categorize demographics
+// returns a vector of vectors of the subdivided nodes
 pub fn subdivide_by_stub_name_num(nodes: Vec<Node>) -> Vec<Vec<Node>> {
     let mut groups: Vec<Vec<Node>> = (0..12).map(|_| Vec::new()).collect(); // Initialize 11 empty vectors
-
+    // iterate across all nodes and assign a group
     for node in nodes {
         let index = node.stub_name_num as usize;
         if index < 12 {
@@ -48,21 +36,15 @@ pub fn subdivide_by_stub_name_num(nodes: Vec<Node>) -> Vec<Vec<Node>> {
 }
 
 
-/// Builds a graph from a vector of nodes.
-/// 
-/// # Parameters:
-/// - `nodes`: A vector of nodes to construct the graph.
-/// 
-/// # Returns:
-/// - A `HashMap` where:
-///   - Keys are node IDs.
-///   - Values are vectors of tuples containing connected node IDs and their respective edge weights.
+// build a graph of connected nodes with weighted edges
+// takes in a single vector of nodes, outputs a connected hashmap representing a connect, weighted graph
 pub fn build_graph(nodes: Vec<Node>) -> HashMap<String, Vec<(String, f64)>> {
     let mut graph: HashMap<String, Vec<(String, f64)>> = HashMap::new();
     let mut edge_counter = 0;
+    // iterate through all nodes
     for (i, node_a) in nodes.iter().enumerate() {
         let node_a_id = format!("{}-{}-{}", node_a.stub_label_num, node_a.year_num, node_a.age_num);
-
+        // iterate through all subsequent nodes
         for node_b in nodes.iter().skip(i + 1) {
             // Skip if either node does not have an estimate value
             if node_a.estimate == 0.0 || node_b.estimate == 0.0 {
@@ -82,8 +64,9 @@ pub fn build_graph(nodes: Vec<Node>) -> HashMap<String, Vec<(String, f64)>> {
                 let normalized_b = node_b.estimate / higher_estimate;
 
                 // Calculate the edge weight
-                let mut weight = 1.0 - (normalized_a - normalized_b).abs();
+                let weight = 1.0 - (normalized_a - normalized_b).abs();
 
+                // if eight exists, assign logic
                 if weight >= 0.0 {
                     edge_counter += 2;
                     // Add bidirectional edges
@@ -93,7 +76,7 @@ pub fn build_graph(nodes: Vec<Node>) -> HashMap<String, Vec<(String, f64)>> {
                             format!("{}-{}-{}", node_b.stub_label_num, node_b.year_num, node_b.age_num),
                             weight,
                         ));
-    
+                        
                     let node_b_id = format!("{}-{}-{}", node_b.stub_label_num, node_b.year_num, node_b.age_num);
                     graph.entry(node_b_id)
                         .or_insert_with(Vec::new)
@@ -102,11 +85,13 @@ pub fn build_graph(nodes: Vec<Node>) -> HashMap<String, Vec<(String, f64)>> {
             }
         }
     }
+    // debugging line
     println!("This graph has {edge_counter} edges");
 
     graph
 }
 
+// sort a graph, used to ensure tests work properly
 fn sort_graph(graph: &mut HashMap<String, Vec<(String, f64)>>) -> Vec<(String, Vec<(String, f64)>)> {
     let mut sorted_graph: Vec<_> = graph.iter()
         .map(|(key, value)| {

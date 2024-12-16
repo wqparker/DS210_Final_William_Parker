@@ -1,4 +1,5 @@
 #[derive(Debug, Clone, PartialEq)]
+// define our node struct to hold the data we want, formatted to our data
 pub struct Node {
     pub unit: String,          // Deaths per 100,000 unit
     pub unit_num: i32,         // 1 or 2 / adjusted or crude
@@ -43,17 +44,17 @@ mod tests {
     fn test_node_initialization() {
         // Create a Node instance using the constructor
         let node = Node::new(
-            "Deaths per 100,000",    // unit
-            2,                       // unit_num
-            "Sex and race",          // stub_name
-            4,                       // stub_name_num
-            "Male: American Indian or Alaska Native", // stub_label
-            4.13,                    // stub_label_num
-            "1988",                  // year
-            12,                      // year_num
-            "All ages",              // age
-            0,                       // age_num
-            20.2,                    // estimate
+            "Deaths per 100,000",                          // unit
+            2,                                         // unit_num
+            "Sex and race",                           // stub_name
+            4,                                    // stub_name_num
+            "Male: American Indian or Alaska Native",// stub_label
+            4.13,                                // stub_label_num
+            "1988",                                        // year
+            12,                                        // year_num
+            "All ages",                                     // age
+            0,                                          // age_num
+            20.2,                                      // estimate
         );
 
         // Define the expected Node

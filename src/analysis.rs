@@ -1,16 +1,9 @@
 use std::collections::HashMap;
 
-/// Represents the graph as an adjacency list.
+// Represents the graph as an adjacency list.
 pub type Graph = HashMap<String, Vec<(String, f64)>>;
 
-/// Finds the most frequent labels from neighbors, considering weights.
-/// 
-/// # Parameters:
-/// - `neighbors`: A list of neighbors and their weights.
-/// - `labels`: Reference to the current node-to-label mapping.
-/// 
-/// # Returns:
-/// - A `Vec<(String, f64)>` with the most frequent label(s) and their weights.
+// find the most frequent labels for a given node's neightbors
 pub fn most_frequent_label(
     neighbors: &Vec<(String, f64)>,
     labels: &HashMap<String, String>,
@@ -34,14 +27,7 @@ pub fn most_frequent_label(
         .collect()
 }
 
-/// Propagates labels across the graph.
-/// 
-/// # Parameters:
-/// - `graph`: Reference to the graph.
-/// - `labels`: Mutable reference to the current node-to-label mapping.
-/// 
-/// # Returns:
-/// - A boolean indicating if any label was updated.
+// propagate the labels
 pub fn propagate_labels(graph: &Graph, labels: &mut HashMap<String, String>) -> bool {
     let mut updated = false;
     let mut new_labels = labels.clone();
@@ -60,13 +46,7 @@ pub fn propagate_labels(graph: &Graph, labels: &mut HashMap<String, String>) -> 
     updated
 }
 
-/// Runs the label propagation algorithm.
-/// 
-/// # Parameters:
-/// - `graph`: Reference to the graph.
-/// 
-/// # Returns:
-/// - A new graph with updated labels in the same structure as the input graph.
+// wrapper function to iterate through graph until it has reduced down to just a handfull of nodes
 pub fn run_label_propagation(graph: &Graph) -> Graph {
     // Initialize labels: each node starts with its own name as the label
     let mut labels: HashMap<String, String> = graph
