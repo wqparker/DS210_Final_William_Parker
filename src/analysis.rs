@@ -21,7 +21,7 @@ pub fn calculate_modularity(
     let mut modularity = 0.0;
     let mut total_weight = 0.0;
 
-    // Calculate total weight (sum of all edge weights)
+    // Step 1: Calculate total weight
     for edges in graph.values() {
         for (_, weight) in edges {
             total_weight += weight;
@@ -29,24 +29,22 @@ pub fn calculate_modularity(
     }
     total_weight /= 2.0;
 
-    // Compute modularity
+    // Step 2: Compute modularity
     for (node, edges) in graph {
         let node_community = communities.get(node).unwrap_or(&0);
         let degree_i: f64 = edges.iter().map(|(_, weight)| weight).sum();
 
         for (neighbor, weight) in edges {
             let neighbor_community = communities.get(neighbor).unwrap_or(&0);
-            let degree_j: f64 = graph.get(neighbor)
-                .map_or(0.0, |neigh_edges| neigh_edges.iter().map(|(_, w)| w).sum());
-
             if node_community == neighbor_community {
-                modularity += *weight - (degree_i * degree_j) / (2.0 * total_weight);
+                modularity += *weight - (degree_i * degree_i) / (2.0 * total_weight);
             }
         }
     }
 
     modularity / (2.0 * total_weight)
 }
+
 
 
 /// Initializes each node to its own community.
@@ -87,16 +85,17 @@ pub fn find_best_community_for_node(
     let node_degree: f64 = graph.get(node)
         .map_or(0.0, |edges| edges.iter().map(|(_, weight)| weight).sum());
 
-    // Step 1: Sum weights of edges connecting the node to each neighboring community
+    // Safe access for edges
     if let Some(edges) = graph.get(node) {
         for (neighbor, weight) in edges {
-            let neighbor_community = *communities.get(neighbor).unwrap_or(&0);
-            *community_weights.entry(neighbor_community).or_insert(0.0) += *weight;
+            if let Some(neighbor_community) = communities.get(neighbor) {
+                *community_weights.entry(*neighbor_community).or_insert(0.0) += *weight;
+            }
         }
     }
 
-    // Step 2: Evaluate modularity gain for moving to each neighboring community
-    let mut best_community = communities.get(node).cloned().unwrap_or(0);
+    // Evaluate modularity gain
+    let mut best_community = *communities.get(node).unwrap_or(&0);
     let mut max_modularity_gain = f64::MIN;
 
     for (&community, &sigma_in) in &community_weights {
@@ -111,6 +110,7 @@ pub fn find_best_community_for_node(
 
     best_community
 }
+
 
 
 /// Updates the degrees of each community based on edge weights.
