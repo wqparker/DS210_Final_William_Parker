@@ -20,9 +20,6 @@ def load_graph_from_csv(file_path):
                 graph.add_edge(node1, node2, weight=weight)
             except Exception as e:
                 print(f"Error on row {i}: {row} - {e}")
-    if len(unique_nodes) < 15:
-        for node in unique_nodes:
-            print(f"Here is a unique node: {node}")
     print(f"Loaded graph with {len(graph.nodes)} nodes and {len(graph.edges)} edges.")
     return graph
 
@@ -42,18 +39,19 @@ def export_filtered_graph(graph, pos, edges, output_file):
     print(f"Graph saved as {output_file}")
 
 # Main function to process and export graphs
-def export_graphs_from_files(csv_file, output_prefix="beta_graph"):
+def export_graphs_from_files(csv_file, output_prefix="gamma_graph"):
     """Load and export graphs from a list of CSV files."""
     graph = load_graph_from_csv(csv_file)
     pos = nx.spring_layout(graph, seed=42, weight = 'weight')  # Consistent layout
     edges = list(graph.edges(data=True))
-    output_file = f"{output_prefix}_{csv_file}_gray.png"
+    output_file = f"{output_prefix}_{csv_file}.png"
     print(f"Graph {csv_file}: {len(graph.nodes)} nodes, {len(graph.edges)} edges")
     export_filtered_graph(graph, pos, edges, output_file)
 
 # Load and export the graphs
 if __name__ == "__main__":
     export_graphs_from_files("old_graph_5.csv")
+    export_graphs_from_files("new_graph_6.csv")
     for i in range (1, 13):
         export_graphs_from_files(f"graph_{i}.csv")
     
